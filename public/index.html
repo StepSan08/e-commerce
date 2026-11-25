@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaStore | Arquitectura Híbrida Cloud</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0f172a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+    /* Navbar */
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.5px; }
+    .badge-cloud {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      border: 1px solid #3b82f6;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .role-control { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); padding: 6px 12px; border-radius: 8px; }
+    .role-control label { font-size: 0.85rem; color: #cbd5e1; }
+    .role-control select {
+      background: #1e293b;
+      color: white;
+      border: 1px solid #475569;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* Container */
+    .container { max-width: 1180px; margin: 2rem auto; padding: 0 1.5rem; }
+
+    /* Admin Form Panel */
+    .admin-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+    .panel-header h2 { font-size: 1.1rem; font-weight: 600; }
+    .db-tags { display: flex; gap: 6px; }
+    .tag-sql { background: #dcfce7; color: #166534; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+    .tag-nosql { background: #fef3c7; color: #92400e; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+    .form-group input {
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { outline: none; border-color: var(--accent); }
+    .form-actions { margin-top: 1.2rem; display: flex; justify-content: flex-end; gap: 10px; }
+
+    /* Buttons */
+    .btn {
+      padding: 0.6rem 1.1rem;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-success { background: var(--success); color: white; width: 100%; }
+    .btn-success:hover { background: #059669; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f1f5f9; }
+    .btn-danger { background: #fee2e2; color: var(--danger); }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-sm { padding: 0.45rem 0.8rem; font-size: 0.82rem; }
+
+    /* Catalog */
+    .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+    .catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+
+    .product-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); }
+
+    .product-img-wrap { position: relative; height: 180px; background: #e2e8f0; overflow: hidden; }
+    .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .product-id-badge {
+      position: absolute; top: 10px; left: 10px;
+      background: rgba(15, 23, 42, 0.8); color: white;
+      font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 6px;
+    }
+    .stock-badge {
+      position: absolute; top: 10px; right: 10px;
+      font-size: 0.75rem; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+    }
+    .in-stock { background: #dcfce7; color: #166534; }
+    .out-stock { background: #fee2e2; color: #991b1b; }
+
+    .product-body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+    .product-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .product-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+    .product-price { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+    .product-desc { font-size: 0.88rem; color: var(--muted); }
+
+    .specs-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
+    }
+    .specs-box span strong { color: var(--text); }
+
+    .card-actions { display: flex; gap: 8px; margin-top: 0.5rem; }
+    .card-actions .btn { flex: 1; }
+
+    /* Reviews */
+    .reviews-section { border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: auto; }
+    .reviews-title { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .review-list { list-style: none; max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .review-item { background: #f1f5f9; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; }
+    .review-header { display: flex; justify-content: space-between; font-weight: 600; color: var(--primary); }
+    .stars { color: #f59e0b; }
+
+    /* Modals */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      align-items: center; justify-content: center; z-index: 100; padding: 1rem;
+    }
+    .modal {
+      background: white; width: 100%; max-width: 420px;
+      border-radius: 12px; padding: 1.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+    }
+    .modal h3 { margin-bottom: 1rem; font-size: 1.15rem; }
+    .modal .form-group { margin-bottom: 0.85rem; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.2rem; }
+
+    /* Toast notification */
+    #toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: var(--primary); color: white;
+      padding: 12px 18px; border-radius: 8px;
+      font-size: 0.88rem; font-weight: 500;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.3s ease; z-index: 200;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <h1>NovaStore</h1>
+      <span class="badge-cloud">SQL + NoSQL Hybrid</span>
+    </div>
+    <div class="role-control">
+      <label for="rolSelect">Modo de vista:</label>
+      <select id="rolSelect" onchange="cambiarRol()">
+        <option value="admin">Administrador (Gestión)</option>
+        <option value="cliente">Cliente (Tienda)</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Panel Administrador -->
+    <section id="panelAdmin" class="admin-panel">
+      <div class="panel-header">
+        <h2>Registrar Nuevo Producto</h2>
+        <div class="db-tags">
+          <span class="tag-sql">Supabase: Precio/Stock</span>
+          <span class="tag-nosql">Firestore: Ficha/Detalles</span>
+        </div>
+      </div>
+      <form id="formProducto" onsubmit="crearProducto(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Código / ID *</label>
+            <input id="pid" required placeholder="Ej. prod_002">
+          </div>
+          <div class="form-group">
+            <label>Nombre del Producto *</label>
+            <input id="nombre" required placeholder="Ej. Smartwatch Pro">
+          </div>
+          <div class="form-group">
+            <label>Precio ($ MXN) *</label>
+            <input id="precio" type="number" step="0.01" min="0" required placeholder="1499">
+          </div>
+          <div class="form-group">
+            <label>Stock Inicial *</label>
+            <input id="stock" type="number" min="0" required placeholder="15">
+          </div>
+          <div class="form-group">
+            <label>Descripción (NoSQL) *</label>
+            <input id="desc" required placeholder="Breve descripción del artículo">
+          </div>
+          <div class="form-group">
+            <label>Color (Atributo NoSQL)</label>
+            <input id="color" placeholder="Ej. Negro Mate">
+          </div>
+          <div class="form-group">
+            <label>Garantía (Atributo NoSQL)</label>
+            <input id="garantia" placeholder="Ej. 12 meses">
+          </div>
+          <div class="form-group">
+            <label>URL de Imagen (Opcional)</label>
+            <input id="foto" type="url" placeholder="https://...">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" onclick="limpiarFormulario()">Limpiar campos</button>
+          <button type="submit" class="btn btn-primary">+ Guardar Producto</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Catálogo -->
+    <div class="section-title">
+      <span>Catálogo de Productos</span>
+      <span id="contadorProductos" style="font-size: 0.85rem; color: var(--muted); font-weight: 500;"></span>
+    </div>
+    <div id="catalogo" class="catalog-grid"></div>
+  </main>
+
+  <!-- Modal Editar Producto -->
+  <div id="modalEditar" class="modal-backdrop">
+    <div class="modal">
+      <h3>Editar Producto</h3>
+      <input type="hidden" id="editId">
+      <div class="form-group">
+        <label>Precio ($ MXN)</label>
+        <input id="editPrecio" type="number" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Stock disponible</label>
+        <input id="editStock" type="number">
+      </div>
+      <div class="form-group">
+        <label>Descripción (Firestore)</label>
+        <input id="editDesc">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="cerrarModal('modalEditar')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarEdicion()">Actualizar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Dejar Reseña -->
+  <div id="modalResena" class="modal-backdrop">
+    <div class="modal">
+      <h3>Escribir Reseña</h3>
+      <input type="hidden" id="resenaProdId">
+      <div class="form-group">
+        <label>Tu nombre</label>
+        <input id="resenaCliente" value="Ana López">
+      </div>
+      <div class="form-group">
+        <label>Calificación</label>
+        <select id="resenaCalif" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+          <option value="5">★★★★★ (5 - Excelente)</option>
+          <option value="4">★★★★☆ (4 - Muy bueno)</option>
+          <option value="3">★★★☆☆ (3 - Regular)</option>
+          <option value="2">★★☆☆☆ (2 - Malo)</option>
+          <option value="1">★☆☆☆☆ (1 - Muy malo)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Comentario</label>
+        <input id="resenaTexto" placeholder="¿Qué te pareció el producto?">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="cerrarModal('modalResena')">Cancelar</button>
+        <button class="btn btn-primary" onclick="enviarResena()">Publicar Reseña</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const CLIENTE_ID = '22222222-2222-2222-2222-222222222222';
+    const DEFAULT_IMG = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80';
+
+    function mostrarToast(mensaje) {
+      const toast = document.getElementById('toast');
+      toast.textContent = mensaje;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    function limpiarFormulario() {
+      document.getElementById('formProducto').reset();
+    }
+
+    function cambiarRol() {
+      const rol = document.getElementById('rolSelect').value;
+      document.getElementById('panelAdmin').style.display = rol === 'admin' ? 'block' : 'none';
+      cargarProductos();
+    }
+
+    async function cargarProductos() {
+      const res = await fetch('/api/productos');
+      const productos = await res.json();
+      const rol = document.getElementById('rolSelect').value;
+      const cont = document.getElementById('catalogo');
+      document.getElementById('contadorProductos').textContent = `${productos.length} artículo(s)`;
+      cont.innerHTML = '';
+
+      productos.forEach(p => {
+        const imgUrl = (p.ficha.fotos && p.ficha.fotos.length > 0) ? p.ficha.fotos[0] : DEFAULT_IMG;
+        const sinStock = p.stock <= 0;
+
+        const comentariosHTML = (p.comentarios || []).map(c => `
+          <li class="review-item">
+            <div class="review-header">
+              <span>${c.cliente}</span>
+              <span class="stars">${'★'.repeat(c.calificacion)}</span>
+            </div>
+            <div>${c.texto}</div>
+          </li>
+        `).join('');
+
+        cont.innerHTML += `
+          <article class="product-card">
+            <div class="product-img-wrap">
+              <img src="${imgUrl}" alt="${p.nombre}" onerror="this.src='${DEFAULT_IMG}'">
+              <span class="product-id-badge">ID: ${p.producto_id}</span>
+              <span class="stock-badge ${sinStock ? 'out-stock' : 'in-stock'}">
+                ${sinStock ? 'Agotado' : `${p.stock} disponibles`}
+              </span>
+            </div>
+
+            <div class="product-body">
+              <div class="product-top">
+                <h3 class="product-title">${p.nombre}</h3>
+                <span class="product-price">$${Number(p.precio).toLocaleString('es-MX')}</span>
+              </div>
+
+              <p class="product-desc">${p.ficha.descripcion || 'Sin descripción registrada.'}</p>
+
+              <div class="specs-box">
+                <span><strong>Color:</strong> ${p.ficha.detalles?.color || 'N/A'}</span>
+                <span><strong>Garantía:</strong> ${p.ficha.detalles?.garantia || 'N/A'}</span>
+              </div>
+
+              <div class="card-actions">
+                ${rol === 'admin' ? `
+                  <button class="btn btn-outline btn-sm" onclick="abrirEditar('${p.producto_id}', ${p.precio}, ${p.stock}, '${(p.ficha.descripcion || '').replace(/'/g, "\\'")}')">Editar</button>
+                  <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.producto_id}')">Eliminar</button>
+                ` : `
+                  <button class="btn btn-success btn-sm" ${sinStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''} onclick="comprar('${p.producto_id}')">
+                    ${sinStock ? 'Sin stock' : 'Comprar ahora'}
+                  </button>
+                  <button class="btn btn-outline btn-sm" onclick="abrirResena('${p.producto_id}')">Reseñar</button>
+                `}
+              </div>
+
+              <div class="reviews-section">
+                <div class="reviews-title">Reseñas de clientes (${(p.comentarios || []).length})</div>
+                <ul class="review-list">
+                  ${comentariosHTML || '<li style="font-size:0.8rem;color:var(--muted);">Aún no hay opiniones sobre este producto.</li>'}
+                </ul>
+              </div>
+            </div>
+          </article>
+        `;
+      });
+    }
+
+    async function crearProducto(e) {
+      e.preventDefault();
+      const body = {
+        producto_id: document.getElementById('pid').value.trim(),
+        nombre: document.getElementById('nombre').value.trim(),
+        precio: document.getElementById('precio').value,
+        stock: document.getElementById('stock').value,
+        descripcion: document.getElementById('desc').value.trim(),
+        color: document.getElementById('color').value.trim(),
+        garantia: document.getElementById('garantia').value.trim(),
+        foto: document.getElementById('foto').value.trim()
+      };
+
+      const res = await fetch('/api/productos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        limpiarFormulario();
+        mostrarToast('Producto guardado en Supabase y Firestore');
+        cargarProductos();
+      } else {
+        mostrarToast('Error: ' + data.error);
+      }
+    }
+
+    function abrirEditar(id, precio, stock, desc) {
+      document.getElementById('editId').value = id;
+      document.getElementById('editPrecio').value = precio;
+      document.getElementById('editStock').value = stock;
+      document.getElementById('editDesc').value = desc;
+      document.getElementById('modalEditar').style.display = 'flex';
+    }
+
+    async function guardarEdicion() {
+      const id = document.getElementById('editId').value;
+      const precio = document.getElementById('editPrecio').value;
+      const stock = document.getElementById('editStock').value;
+      const descripcion = document.getElementById('editDesc').value;
+
+      const res = await fetch(`/api/productos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ precio, stock, descripcion })
+      });
+
+      if (res.ok) {
+        cerrarModal('modalEditar');
+        mostrarToast('Producto actualizado en ambas bases');
+        cargarProductos();
+      }
+    }
+
+    async function eliminarProducto(id) {
+      if (!confirm('¿Deseas eliminar este producto de Supabase y Firestore?')) return;
+      const res = await fetch(`/api/productos/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        mostrarToast('Producto eliminado correctamente');
+        cargarProductos();
+      }
+    }
+
+    async function comprar(producto_id) {
+      const res = await fetch('/api/comprar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ producto_id, usuario_id: CLIENTE_ID })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        mostrarToast('Compra exitosa. Stock actualizado en SQL');
+        cargarProductos();
+      } else {
+        mostrarToast(data.error);
+      }
+    }
+
+    function abrirResena(id) {
+      document.getElementById('resenaProdId').value = id;
+      document.getElementById('resenaTexto').value = '';
+      document.getElementById('modalResena').style.display = 'flex';
+    }
+
+    async function enviarResena() {
+      const id = document.getElementById('resenaProdId').value;
+      const cliente = document.getElementById('resenaCliente').value.trim() || 'Cliente';
+      const calificacion = document.getElementById('resenaCalif').value;
+      const texto = document.getElementById('resenaTexto').value.trim();
+      if (!texto) return mostrarToast('Escribe un comentario antes de publicar');
+
+      const res = await fetch(`/api/resenas/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente, calificacion, texto })
+      });
+
+      if (res.ok) {
+        cerrarModal('modalResena');
+        mostrarToast('Reseña guardada en Firestore');
+        cargarProductos();
+      }
+    }
+
+    function cerrarModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    cargarProductos();
+  </script>
+</body>
+</html>
