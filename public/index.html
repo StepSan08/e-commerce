@@ -61,6 +61,33 @@
     /* Container */
     .container { max-width: 1180px; margin: 2rem auto; padding: 0 1.5rem; }
 
+    /* Client Hero Banner */
+    .client-hero {
+      display: none;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: white;
+      border-radius: 14px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+    .client-hero h2 { font-size: 1.55rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .client-hero p { color: #cbd5e1; font-size: 0.92rem; margin-bottom: 1.25rem; }
+    .search-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .search-bar input {
+      flex: 1;
+      min-width: 240px;
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    .search-bar input::placeholder { color: #94a3b8; }
+    .search-bar input:focus { outline: none; border-color: #60a5fa; background: rgba(255,255,255,0.15); }
+
     /* Admin Form Panel */
     .admin-panel {
       background: var(--card);
@@ -113,7 +140,7 @@
     .btn-outline:hover { background: #f1f5f9; }
     .btn-danger { background: #fee2e2; color: var(--danger); }
     .btn-danger:hover { background: #fecaca; }
-    .btn-sm { padding: 0.45rem 0.8rem; font-size: 0.82rem; }
+    .btn-sm { padding: 0.45rem 0.75rem; font-size: 0.8rem; }
 
     /* Catalog */
     .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; }
@@ -131,7 +158,7 @@
     }
     .product-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); }
 
-    .product-img-wrap { position: relative; height: 180px; background: #e2e8f0; overflow: hidden; }
+    .product-img-wrap { position: relative; height: 185px; background: #e2e8f0; overflow: hidden; cursor: pointer; }
     .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
     .product-id-badge {
       position: absolute; top: 10px; left: 10px;
@@ -162,7 +189,7 @@
     }
     .specs-box span strong { color: var(--text); }
 
-    .card-actions { display: flex; gap: 8px; margin-top: 0.5rem; }
+    .card-actions { display: flex; gap: 6px; margin-top: 0.5rem; }
     .card-actions .btn { flex: 1; }
 
     /* Reviews */
@@ -176,17 +203,19 @@
     /* Modals */
     .modal-backdrop {
       display: none; position: fixed; inset: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(15, 23, 42, 0.65);
       align-items: center; justify-content: center; z-index: 100; padding: 1rem;
     }
     .modal {
-      background: white; width: 100%; max-width: 420px;
-      border-radius: 12px; padding: 1.5rem;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+      background: white; width: 100%; max-width: 460px;
+      border-radius: 14px; padding: 1.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25);
+      max-height: 90vh; overflow-y: auto;
     }
-    .modal h3 { margin-bottom: 1rem; font-size: 1.15rem; }
+    .modal h3 { margin-bottom: 0.75rem; font-size: 1.2rem; }
     .modal .form-group { margin-bottom: 0.85rem; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.2rem; }
+    .detail-img { width: 100%; height: 210px; object-fit: cover; border-radius: 10px; margin-bottom: 1rem; }
 
     /* Toast notification */
     #toast {
@@ -218,6 +247,15 @@
   </header>
 
   <main class="container">
+    <!-- Banner Bienvenida Cliente -->
+    <section id="heroCliente" class="client-hero">
+      <h2>Explora el Catálogo de NovaStore</h2>
+      <p>Consulta especificaciones detalladas, disponibilidad en tiempo real y opiniones verificadas de otros compradores.</p>
+      <div class="search-bar">
+        <input id="buscadorInput" type="text" oninput="filtrarProductos()" placeholder="Buscar por nombre, descripción o color...">
+      </div>
+    </section>
+
     <!-- Panel Administrador -->
     <section id="panelAdmin" class="admin-panel">
       <div class="panel-header">
@@ -276,6 +314,29 @@
     </div>
     <div id="catalogo" class="catalog-grid"></div>
   </main>
+
+  <!-- Modal Detalle Completo del Producto -->
+  <div id="modalDetalle" class="modal-backdrop" onclick="if(event.target===this) cerrarModal('modalDetalle')">
+    <div class="modal">
+      <img id="detImg" class="detail-img" src="" alt="Producto">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <h3 id="detNombre" style="margin:0;"></h3>
+        <span id="detPrecio" style="font-size:1.25rem; font-weight:700; color:var(--accent);"></span>
+      </div>
+      <p id="detDesc" style="color:var(--muted); font-size:0.92rem; margin-bottom:1rem;"></p>
+      <div class="specs-box" style="margin-bottom:1rem; flex-direction:column; gap:6px;">
+        <div><strong>Código:</strong> <span id="detId"></span></div>
+        <div><strong>Disponibilidad:</strong> <span id="detStock"></span></div>
+        <div><strong>Color:</strong> <span id="detColor"></span></div>
+        <div><strong>Garantía:</strong> <span id="detGarantia"></span></div>
+      </div>
+      <div class="reviews-title">Todas las reseñas</div>
+      <ul id="detResenas" class="review-list" style="max-height:140px; margin-bottom:1rem;"></ul>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="cerrarModal('modalDetalle')">Cerrar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal Editar Producto -->
   <div id="modalEditar" class="modal-backdrop">
@@ -336,6 +397,7 @@
   <script>
     const CLIENTE_ID = '22222222-2222-2222-2222-222222222222';
     const DEFAULT_IMG = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80';
+    let productosCache = [];
 
     function mostrarToast(mensaje) {
       const toast = document.getElementById('toast');
@@ -351,18 +413,33 @@
     function cambiarRol() {
       const rol = document.getElementById('rolSelect').value;
       document.getElementById('panelAdmin').style.display = rol === 'admin' ? 'block' : 'none';
-      cargarProductos();
+      document.getElementById('heroCliente').style.display = rol === 'cliente' ? 'block' : 'none';
+      renderizarCatalogo(productosCache);
     }
 
     async function cargarProductos() {
       const res = await fetch('/api/productos');
-      const productos = await res.json();
+      productosCache = await res.json();
+      renderizarCatalogo(productosCache);
+    }
+
+    function filtrarProductos() {
+      const q = document.getElementById('buscadorInput').value.toLowerCase().trim();
+      const filtrados = productosCache.filter(p =>
+        p.nombre.toLowerCase().includes(q) ||
+        (p.ficha.descripcion || '').toLowerCase().includes(q) ||
+        (p.ficha.detalles?.color || '').toLowerCase().includes(q)
+      );
+      renderizarCatalogo(filtrados);
+    }
+
+    function renderizarCatalogo(lista) {
       const rol = document.getElementById('rolSelect').value;
       const cont = document.getElementById('catalogo');
-      document.getElementById('contadorProductos').textContent = `${productos.length} artículo(s)`;
+      document.getElementById('contadorProductos').textContent = `${lista.length} artículo(s)`;
       cont.innerHTML = '';
 
-      productos.forEach(p => {
+      lista.forEach(p => {
         const imgUrl = (p.ficha.fotos && p.ficha.fotos.length > 0) ? p.ficha.fotos[0] : DEFAULT_IMG;
         const sinStock = p.stock <= 0;
 
@@ -378,7 +455,7 @@
 
         cont.innerHTML += `
           <article class="product-card">
-            <div class="product-img-wrap">
+            <div class="product-img-wrap" onclick="abrirDetalle('${p.producto_id}')">
               <img src="${imgUrl}" alt="${p.nombre}" onerror="this.src='${DEFAULT_IMG}'">
               <span class="product-id-badge">ID: ${p.producto_id}</span>
               <span class="stock-badge ${sinStock ? 'out-stock' : 'in-stock'}">
@@ -405,8 +482,9 @@
                   <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.producto_id}')">Eliminar</button>
                 ` : `
                   <button class="btn btn-success btn-sm" ${sinStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''} onclick="comprar('${p.producto_id}')">
-                    ${sinStock ? 'Sin stock' : 'Comprar ahora'}
+                    ${sinStock ? 'Sin stock' : 'Comprar'}
                   </button>
+                  <button class="btn btn-outline btn-sm" onclick="abrirDetalle('${p.producto_id}')">Detalles</button>
                   <button class="btn btn-outline btn-sm" onclick="abrirResena('${p.producto_id}')">Reseñar</button>
                 `}
               </div>
@@ -421,6 +499,33 @@
           </article>
         `;
       });
+    }
+
+    function abrirDetalle(id) {
+      const p = productosCache.find(item => item.producto_id === id);
+      if (!p) return;
+      const imgUrl = (p.ficha.fotos && p.ficha.fotos.length > 0) ? p.ficha.fotos[0] : DEFAULT_IMG;
+      document.getElementById('detImg').src = imgUrl;
+      document.getElementById('detNombre').textContent = p.nombre;
+      document.getElementById('detPrecio').textContent = `$${Number(p.precio).toLocaleString('es-MX')} MXN`;
+      document.getElementById('detDesc').textContent = p.ficha.descripcion || 'Sin descripción registrada.';
+      document.getElementById('detId').textContent = p.producto_id;
+      document.getElementById('detStock').textContent = p.stock > 0 ? `${p.stock} unidades disponibles` : 'Agotado';
+      document.getElementById('detColor').textContent = p.ficha.detalles?.color || 'N/A';
+      document.getElementById('detGarantia').textContent = p.ficha.detalles?.garantia || 'N/A';
+
+      const listaRes = document.getElementById('detResenas');
+      listaRes.innerHTML = (p.comentarios || []).map(c => `
+        <li class="review-item">
+          <div class="review-header">
+            <span>${c.cliente}</span>
+            <span class="stars">${'★'.repeat(c.calificacion)}</span>
+          </div>
+          <div>${c.texto}</div>
+        </li>
+      `).join('') || '<li style="font-size:0.8rem;color:var(--muted);">Sin reseñas aún.</li>';
+
+      document.getElementById('modalDetalle').style.display = 'flex';
     }
 
     async function crearProducto(e) {
